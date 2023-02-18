@@ -33,6 +33,8 @@ const setup = async() => {
 
     console.log("Contacts:", contacts);
     console.log("Setup done.");
+
+    sendMessage("maxper", "[Contactor] Setup done.");
 };
 
 const OnReceiveDiscordMessage = (discordId, message) => {
@@ -65,6 +67,4 @@ discord.on("ready", async() => {
     });
     
     await setup();
-
-    sendMessage("maxper", "Hello World!")
 });
