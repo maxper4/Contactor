@@ -31,7 +31,7 @@ const setup = async() => {
         contacts[contact.nickname] = await discord.users.fetch(contact.discordId, false);
     }));
 
-    console.log("Contacts:", contacts);
+    console.log("Contacts: ", contacts);
     console.log("Setup done.");
 
     sendMessage("maxper", "[Contactor] Setup done.");
@@ -42,8 +42,8 @@ const OnReceiveDiscordMessage = (discordId, message) => {
     const nickname = ContactByDiscordId(discordId).nickname;
 
     if(message == "ping") sendMessage(nickname, "pong");
-    if(message == "reload") setup();
-    if(message == "nickname") sendMessage(nickname, nickname);
+    else if(message == "reload") setup();
+    else if(message == "nickname") sendMessage(nickname, nickname);
 
     console.log(nickname, message);
 };
