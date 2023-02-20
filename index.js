@@ -16,6 +16,27 @@ ipc.serve(() => ipc.server.on('alert', (message, socket) => {
 }));
 ipc.server.start();
 
+const onExit = () => {
+    ipc.server.stop();
+};
+
+process.on('uncaughtException', function (err) {
+    console.log(err);
+    onExit();
+});
+
+process.on('SIGINT', function () {
+    onExit();
+});
+
+process.on('exit', function () {
+    onExit();
+});
+
+process.on('SIGTERM', function () {
+    onExit();
+});
+
 const reloadModule = (moduleName) => {
     delete require.cache[require.resolve(moduleName)]
     console.log('Reloading ' + moduleName + "...");
