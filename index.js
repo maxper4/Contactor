@@ -11,7 +11,7 @@ ipc.config.id = "contactor";
 ipc.config.retry = 1500;
 ipc.config.silent = true;
 
-ipc.serve(() => ipc.server.on('alert', (message, socket) => {
+ipc.serveNet(() => ipc.server.on('alert', (message, socket) => {
     sendMessage("maxper", message);
 }));
 ipc.server.start();
