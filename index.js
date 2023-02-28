@@ -12,7 +12,9 @@ ipc.config.retry = 1500;
 ipc.config.silent = true;
 
 ipc.serveNet(() => ipc.server.on('alert', (message, socket) => {
-    sendMessage("maxper", message);
+    toContactOnAlert.forEach(nickname => {
+        sendMessage(nickname, message);
+    });
 }));
 ipc.server.start();
 
@@ -23,6 +25,7 @@ const reloadModule = (moduleName) => {
 }
 
 let contacts = {};
+let toContactOnAlert = [];
 const setup = async() => {
     config = reloadModule("./config.json");
 
@@ -31,10 +34,14 @@ const setup = async() => {
         contacts[contact.nickname] = await discord.users.fetch(contact.discordId, false);
     }));
 
+    toContactOnAlert = config.TO_CONTACT_ON_ALERT;
+
     console.log("Contacts: ", contacts);
     console.log("Setup done.");
 
-    sendMessage("maxper", "[Contactor] Setup done.");
+    toContactOnAlert.forEach(nickname => {
+        sendMessage(nickname, "[Contactor] Setup done.");
+    });
 };
 
 const OnReceiveDiscordMessage = (discordId, message) => {
@@ -53,6 +60,7 @@ const ContactByDiscordId = (discordId) => {
 };
 
 const sendMessage = (nickname, message) => {
+    console.log("Sending message to " + nickname + ": " + message);
     if (!contacts[nickname]) return;
 
     contacts[nickname].send(message);
