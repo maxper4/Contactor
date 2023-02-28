@@ -1,7 +1,7 @@
 ## Contactor
 
 Contactor is a server listening for incoming communications from others bots (using node-ipc) to send them to the owner via discord private messages (DM).
-This way, you don't need to be online to receive alerts from your bots, or to have an SMTP server to receive alerts from your bots.
+This way, you don't need to be online to receive alerts from your bots, or to have an SMTP server.
 
 ### Installation
 
