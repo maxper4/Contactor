@@ -16,7 +16,8 @@ Example:
     "CONTACTS": [
         { 
             "nickname": "owner (a nickname you want to use to contact the owner)",
-            "discordId": "your discord id (not the nickname, found with the developer mode)"
+            "discordId": "your discord id (not the nickname, found with the developer mode)",
+            "permissions": 3
         }
     ],
     "TO_CONTACT_ON_ALERT": [
@@ -24,6 +25,11 @@ Example:
     ]
 }
 ```
+Permission levels:
+- 1 : basic contact, can receive messages, ping the server and get its nickname
+- 2 : intermediate contact, can also reload the config file, list contacts
+- 3 : admin contact, can do everything
+
 
 5. Run the server with `npm start`
 
