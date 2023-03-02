@@ -17,11 +17,15 @@ Example:
         { 
             "nickname": "owner (a nickname you want to use to contact the owner)",
             "discordId": "your discord id (not the nickname, found with the developer mode)",
-            "permissions": 3
+            "permissions": 3,
+            "mutedAlerts": []
         }
     ],
     "TO_CONTACT_ON_ALERT": [
         "owner"
+    ],
+    "DUMPING_ALERTS": [
+        "web-change-listener"
     ]
 }
 ```
@@ -30,6 +34,8 @@ Permission levels:
 - 2 : intermediate contact, can also reload the config file, list contacts
 - 3 : admin contact, can do everything
 
+
+Muted alerts are the alerts that the contact will not receive. They are the names of the bots that send the alerts. It allows you to mute alerts from bots that you don't want to receive but to still be in the contact on alert list. Also applies for users.
 
 5. Run the server with `npm start`
 
