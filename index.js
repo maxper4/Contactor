@@ -1,5 +1,5 @@
 const { Client, GatewayIntentBits, ChannelType } = require("discord.js");
-const ipc = require('node-ipc');	   
+const ipc = require('node-ipc');
 const { writeFileSync } = require("fs");
 const { spawn, fork } = require("child_process");
 
@@ -14,27 +14,85 @@ discord.login(config.DISCORD_BOT_TOKEN);
 
 ipc.config.id = "contactor";
 ipc.config.retry = 1500;
-ipc.config.silent = true;
+ipc.config.silent = false;
 
-ipc.serveNet(() => ipc.server.on('alert', (message, socket) => {
-    message = JSON.parse(message);
+ipc.serveNet(() => 
+{
+    ipc.server.on('alert', (message, socket) => {
+        try {
+            message = JSON.parse(message);
+        } catch (error) {
+            console.log("Error while parsing message: " + error);
+            return;
+        }
 
-    if(config.DUMPING_ALERTS.includes(message.id)) {
-        const record = {
-            timestamp: Date.now(),
-            from: message.id,
-            message: message.message,
-        };
-        dump.push(record);
-        writeFileSync(DUMP_FILE, JSON.stringify(dump, null, 4));
-    }
+        console.log("Received alert: ", message);
+        if(config.DUMPING_ALERTS.includes(message.id)) {
+            const record = {
+                timestamp: Date.now(),
+                from: message.id,
+                message: message.message,
+            };
+            dump.push(record);
+            writeFileSync(DUMP_FILE, JSON.stringify(dump, null, 4));
+        }
 
-    toContactOnAlert.forEach(nickname => {
-        if(contacts[nickname] && !config.CONTACTS.find(x => x.nickname == nickname).mutedAlerts.includes(message.id))
-            sendMessage(nickname, message.message);
+        toContactOnAlert.forEach(nickname => {
+            if(contacts[nickname] && !config.CONTACTS.find(x => x.nickname == nickname).mutedAlerts.includes(message.id))
+                sendMessage(nickname, message.message);
+        });
     });
-}));
+
+    ipc.server.on("ping", (message, socket) => {
+        console.log("Received ping: ", message);
+        ipc.server.emit(socket, "pong", "pong");
+    });
+
+    ipc.server.on("test-running", (message, socket) => {
+        ipc.server.emit(socket, "test-running", "good");
+    })
+
+    ipc.server.on("getContacts", (message, socket) => {
+        ipc.server.emit(socket, "contacts", config.CONTACTS.map(x => x.nickname));
+    });
+
+    ipc.server.on("removeContact", (message, socket) => {
+        if(!config.CONTACTS.find(x => x.nickname == message)) {
+            ipc.server.emit(socket, "contactRemoved", "false");
+            return;
+        }
+
+        config.CONTACTS = config.CONTACTS.filter(x => x.nickname != message);
+        saveConfig();
+        setup();
+        ipc.server.emit(socket, "contactRemoved", "true");
+    });
+
+    ipc.server.on("addContact", (message, socket) => {
+        if(config.CONTACTS.find(x => x.nickname == message.nickname)) {
+            ipc.server.emit(socket, "contactAdded", "false");
+            return;
+        }
+
+        let contact = {
+            nickname: message.nickname,
+            discordId: message.discordId,
+            permissions: message.permissions,
+            mutedAlerts: [],
+        };
+        config.CONTACTS.push(contact);
+        saveConfig();
+        setup();
+        ipc.server.emit(socket, "contactAdded", "true");
+    });
+});
 ipc.server.start();
+
+ipc.connectToNet('botsmanager', 8001, () => {
+    ipc.of.botsmanager.on('connect', () => {
+        console.log('Connected to bots-manager');
+    });
+});
 
 const reloadModule = (moduleName) => {
     delete require.cache[require.resolve(moduleName)]
@@ -526,23 +584,7 @@ const OnReceiveDiscordMessage = (discordId, message) => {
             return;
         }
 
-        const bot = config.STARTABLE.find(x => x.name == args[0]);
-        if(!bot) {
-            sendMessage(nickname, "Bot not found.");
-            return;
-        }
-
-        const botArgs = args.slice(1);
-
-        const botProcess = fork(bot.path, botArgs, {
-            detached: true,
-            stdio: "ignore",
-            cwd: bot.path
-        });
-
-        botProcess.unref();
-
-        sendMessage(nickname, "[Contactor] Started bot " + bot.name + ".");
+        ipc.of.botsmanager.emit("start", JSON.stringify({ bot: args[0], args: args.slice(1)}));
     }
     else if(message.startsWith("dm ")) {
         const contact = message.replace("dm ", "").split(" ");
